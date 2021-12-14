@@ -2,8 +2,8 @@
 Программный модуль для фитнес-трекера.
 Этот модуль будет рассчитывать и отображать результаты тренировки.
 """
-from dataclasses import dataclass
-from typing import Callable, Union
+from dataclasses import dataclass, asdict
+from typing import Union, Type
 
 
 @dataclass
@@ -18,11 +18,12 @@ class InfoMessage:
 
     def get_message(self) -> str:
         """Вывод строки сообщения"""
-        return (f'Тип тренировки: {self.training_type}; '
-                + f'Длительность: {self.duration:.3f} ч.; '
-                + f'Дистанция: {self.distance:.3f} км; '
-                + f'Ср. скорость: {self.speed:.3f} км/ч; '
-                + f'Потрачено ккал: {self.calories:.3f}.')
+        return ('Тип тренировки: {training_type}; '
+                'Длительность: {duration:.3f} ч.; '
+                'Дистанция: {distance:.3f} км; '
+                'Ср. скорость: {speed:.3f} км/ч; '
+                'Потрачено ккал: {calories:.3f}.'.format(**asdict(self))
+                )
 
 
 class Training:
@@ -42,7 +43,6 @@ class Training:
                  ) -> None:
         self.action = action
         self.duration_in_hours = duration
-        self.duration_in_min = duration * self.MIN_IN_HOUR
         self.weight = weight
 
     def get_distance(self) -> float:
@@ -63,7 +63,8 @@ class Training:
                            self.duration_in_hours,
                            self.get_distance(),
                            self.get_mean_speed(),
-                           self.get_spent_calories())
+                           self.get_spent_calories()
+                           )
 
 
 class Running(Training):
@@ -80,7 +81,8 @@ class Running(Training):
                 - self.COEFF_CALORIE_2)
                 * self.weight
                 / self.M_IN_KM
-                * self.duration_in_min)
+                * (self.duration_in_hours * self.MIN_IN_HOUR)
+                )
 
 
 class SportsWalking(Training):
@@ -106,7 +108,8 @@ class SportsWalking(Training):
                  + (super().get_mean_speed()**2 // self.height)
                  * self.COEFF_CALORIE_2
                  * self.weight)
-                * self.duration_in_min)
+                * (self.duration_in_hours * self.MIN_IN_HOUR)
+                )
 
 
 class Swimming(Training):
@@ -134,7 +137,8 @@ class Swimming(Training):
         return (self.length_pool
                 * self.count_pool
                 / self.M_IN_KM
-                / self.duration_in_hours)
+                / self.duration_in_hours
+                )
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
@@ -143,15 +147,14 @@ class Swimming(Training):
                 * self.weight)
 
 
-def read_package(workout_type: str, data: list) -> Union[Training, str]:
+def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    training_dict: dict[str, Callable[..., Training]] = {'SWM': Swimming,
-                                                         'RUN': Running,
-                                                         'WLK': SportsWalking}
+    training_dict: dict[str, Type[Union[Swimming, Running, SportsWalking]]]
+    training_dict = {'SWM': Swimming, 'RUN': Running, 'WLK': SportsWalking}
     if workout_type in training_dict:
         return training_dict[workout_type](*data)
     else:
-        return 'Данный вид тренировки отсутствует в базе!'
+        raise ValueError("Несоответствующее значение")
 
 
 def main(training: Training) -> None:
@@ -169,7 +172,4 @@ if __name__ == '__main__':
 
     for workout_type, data in packages:
         training = read_package(workout_type, data)
-        if type(training).__name__ != 'str':
-            main(training)
-        else:
-            print(training)
+        main(training)
