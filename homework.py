@@ -145,11 +145,9 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Union[Training, str]:
     """Прочитать данные полученные от датчиков."""
-    training_dict: dict[str, Callable[..., Training]] = {
-                                                        'SWM': Swimming,
-                                                        'RUN': Running,
-                                                        'WLK': SportsWalking
-                                                        }
+    training_dict: dict[str, Callable[..., Training]] = {'SWM': Swimming,
+                                                         'RUN': Running,
+                                                         'WLK': SportsWalking}
     if workout_type in training_dict:
         return training_dict[workout_type](*data)
     else:
