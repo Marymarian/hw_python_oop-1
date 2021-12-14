@@ -3,7 +3,7 @@
 Этот модуль будет рассчитывать и отображать результаты тренировки.
 """
 from dataclasses import dataclass, asdict
-from typing import Union, Type
+from typing import Type
 
 
 @dataclass
@@ -149,7 +149,7 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    training_dict: dict[str, Type[Union[Swimming, Running, SportsWalking]]]
+    training_dict: dict[str, Type[Training]]
     training_dict = {'SWM': Swimming, 'RUN': Running, 'WLK': SportsWalking}
     if workout_type in training_dict:
         return training_dict[workout_type](*data)
